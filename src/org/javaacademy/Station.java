@@ -68,7 +68,7 @@ public class Station {
     }
 
     private String printChangeLines() {
-        if(transferStation == null) {
+        if (transferStation == null) {
             return null;
         }
         return transferStation.get(0).getLine().getColorLine();

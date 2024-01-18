@@ -1,21 +1,20 @@
 package org.javaacademy;
 
-import org.javaacademy.exception.LineCreationException;
-import org.javaacademy.exception.StationCreationException;
-import org.javaacademy.exception.TimeDurationException;
-
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import org.javaacademy.exception.LineCreationException;
+import org.javaacademy.exception.StationCreationException;
+import org.javaacademy.exception.TimeDurationException;
 
 public class Metro {
     private final String city = "Пермь";
     private List<Line> lines = new ArrayList<>();
 
     public void createLine(String color) throws LineCreationException {
-       if(checkLineColor(color, lines)) {
-           throw new LineCreationException("Линия с таким цветом уже существует");
-       }
+        if (checkLineColor(color, lines)) {
+            throw new LineCreationException("Линия с таким цветом уже существует");
+        }
         lines.add(new Line(color));
     }
 
@@ -24,11 +23,11 @@ public class Metro {
         Line line = lines.stream()
                 .filter(line1 -> line1.getColorLine().equals(color))
                 .findFirst().get();
-        if(line.getStations().size() != 0) {
+        if (line.getStations().size() != 0) {
             throw new StationCreationException("На линии есть станции");
         }
         Station station = new Station();
-        line.getStations().add(0,station);
+        line.getStations().add(0, station);
         station.setMetro(Metro.this);
         station.setLine(line);
         station.setName(name);
@@ -37,7 +36,7 @@ public class Metro {
     public void createLastStation(String color, String name, Duration transferTime, List<Station> stations)
             throws LineCreationException, StationCreationException, TimeDurationException {
         checkLine(color, name);
-        if(transferTime.isNegative() || transferTime.isZero()) {
+        if (transferTime.isNegative() || transferTime.isZero()) {
             throw new TimeDurationException("Время перегона меньше или равно 0");
         }
         Line line = lines.stream()
@@ -58,19 +57,19 @@ public class Metro {
     }
 
     private void checkLine(String color, String name) throws LineCreationException, StationCreationException {
-        if(!checkLineColor(color, lines)) {
+        if (!checkLineColor(color, lines)) {
             throw new LineCreationException("Линии с таким цветом не существует");
         }
-        if(checkStationName(name,lines)) {
+        if (checkStationName(name, lines)) {
             throw new StationCreationException("Такое имя есть на станциях");
         }
     }
 
     private void checkPrevStation(Station prevStation) throws StationCreationException {
-        if(prevStation == null) {
+        if (prevStation == null) {
             throw new StationCreationException("Предыдущая станция отсутсвует");
         }
-        if(prevStation.getNextStation() != null) {
+        if (prevStation.getNextStation() != null) {
             throw new StationCreationException("Предыдущая станция имеет следющую станцию");
         }
     }

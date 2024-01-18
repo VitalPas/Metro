@@ -1,12 +1,12 @@
 package org.javaacademy;
 
 
+import java.time.Duration;
+import java.util.List;
 import org.javaacademy.exception.LineCreationException;
 import org.javaacademy.exception.StationCreationException;
 import org.javaacademy.exception.TimeDurationException;
 
-import java.time.Duration;
-import java.util.List;
 
 
 public class Runner {
@@ -19,10 +19,10 @@ public class Runner {
         List<Station> stationsRed = null;
         List<Station> stationsBlue = null;
         for (Line line : lines) {
-            if(line.getColorLine().equals("Красная")) {
+            if (line.getColorLine().equals("Красная")) {
                 stationsRed = line.getStations();
             }
-            if(line.getColorLine().equals("Синяя")) {
+            if (line.getColorLine().equals("Синяя")) {
                 stationsBlue = line.getStations();
             }
         }
