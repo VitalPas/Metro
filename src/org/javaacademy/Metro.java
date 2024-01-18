@@ -12,10 +12,6 @@ public class Metro {
     private final String city = "Пермь";
     private List<Line> lines = new ArrayList<>();
 
-    public String getName() {
-        return city;
-    }
-
     public void createLine(String color) throws LineCreationException {
        if(checkLineColor(color, lines)) {
            throw new LineCreationException("Линия с таким цветом уже существует");
@@ -38,7 +34,8 @@ public class Metro {
         station.setName(name);
     }
 
-    public void createLastStation(String color, String name, Duration transferTime, List<Station> stations) throws LineCreationException, StationCreationException, TimeDurationException {
+    public void createLastStation(String color, String name, Duration transferTime, List<Station> stations)
+            throws LineCreationException, StationCreationException, TimeDurationException {
         checkLine(color, name);
         if(transferTime.isNegative() || transferTime.isZero()) {
             throw new TimeDurationException("Время перегона меньше или равно 0");

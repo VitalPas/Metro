@@ -12,16 +12,7 @@ public class Station {
     private Duration transferTime;
     private String name;
 
-
     public Station() {
-    }
-
-    public Station(String name) {
-        this.name = name;
-    }
-
-    public Metro getMetro() {
-        return metro;
     }
 
     public void setMetro(Metro metro) {
