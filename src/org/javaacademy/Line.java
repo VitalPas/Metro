@@ -1,11 +1,10 @@
 package org.javaacademy;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
 
 public class Line {
     private String colorLine;
-    private List<Station> stations = new ArrayList<>();
+    private LinkedHashSet<Station> stations = new LinkedHashSet<>();
     private Metro metro;
 
     public Line(String colorLine) {
@@ -16,7 +15,7 @@ public class Line {
         return colorLine;
     }
 
-    public List<Station> getStations() {
+    public LinkedHashSet<Station> getStations() {
         return stations;
     }
 
@@ -28,12 +27,23 @@ public class Line {
         this.colorLine = colorLine;
     }
 
-    public void setStations(List<Station> stations) {
+    public void setStations(LinkedHashSet<Station> stations) {
         this.stations = stations;
     }
 
     public void setMetro(Metro metro) {
         this.metro = metro;
+    }
+
+    public void addFirstStation(String name) {
+        Station station = new Station(metro, this, name);
+        stations.add(station);
+    }
+
+    public Station addLastStation(String name) {
+        Station station = new Station(metro, this, name);
+        stations.add(station);
+        return station;
     }
 
     @Override
