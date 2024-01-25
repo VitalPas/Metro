@@ -1,17 +1,15 @@
 package org.javaacademy;
 
+import java.time.Duration;
+import java.time.LocalDate;
+import java.util.Objects;
+import java.util.Set;
 import org.javaacademy.exception.StationExistException;
 import org.javaacademy.exception.TransferException;
 
-import java.time.Duration;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-
 public class Station {
-    private Metro metro;
-    private Line line;
+    private final Metro metro;
+    private final Line line;
     private Station prevStation;
     private Station nextStation;
     private Set<Station> transferStation;
@@ -30,16 +28,8 @@ public class Station {
         return desk;
     }
 
-    public void setMetro(Metro metro) {
-        this.metro = metro;
-    }
-
     public Line getLine() {
         return line;
-    }
-
-    public void setLine(Line line) {
-        this.line = line;
     }
 
     public Station getPrevStation() {
@@ -93,10 +83,15 @@ public class Station {
         if (transferStation == null) {
             return null;
         }
-        return transferStation.stream().findFirst().get().getLine().getColorLine();
+        return transferStation.stream()
+                .findFirst()
+                .get()
+                .getLine()
+                .getColorLine();
     }
 
-    public void saleTicket(LocalDate localDate, Station stationStart, Station stationEnd) throws StationExistException, TransferException {
+    public void saleTicket(LocalDate localDate, Station stationStart, Station stationEnd)
+            throws StationExistException, TransferException {
         int ticketPrice = metro.countTransferBetweenStation(stationStart, stationEnd) * 5 + 20;
         desk.savePriceTicket(localDate, ticketPrice);
     }

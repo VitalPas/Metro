@@ -4,11 +4,19 @@ import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
-
 import org.javaacademy.exception.*;
 
 public class Metro {
+    private static final String LINE_COLOR_EXISTS_EXCEPTION = "Линия с таким цветом уже существует";
+    private static final String LINE_COLOR_NOT_EXISTS_EXCEPTION = "Линии с таким цветом не существует";
+    private static final String STATION_NAME_EXISTS_EXCEPTION = "Такое имя есть на станциях";
+    private static final String STATION_ON_LINE_EXISTS_EXCEPTION = "На линии есть станции";
+    private static final String STATION_ON_LINE_NOT_EXISTS_EXCEPTION = "Станции не существует на линии";
+    private static final String TRANSIT_TIME_EXCEPTION = "На линии есть станции";
+    private static final String START_STATION_EQUALS_END_EXCEPTION = "Начальная станция равна конечной";
+    private static final String PREV_STATION_NOT_EXISTS_EXCEPTION = "Предыдущая станция отсутсвует";
+    private static final String PREV_STATION_HAS_NEXT_EXCEPTION = "Предыдущая станция имеет следющую станцию";
+
     private final String city;
     private final HashSet<Line> lines = new HashSet<>();
 
@@ -22,7 +30,7 @@ public class Metro {
 
     public Line createLine(String color) throws LineCreationException {
         if (isLineWithColorExists(color, lines)) {
-            throw new LineCreationException("Линия с таким цветом уже существует");
+            throw new LineCreationException(LINE_COLOR_EXISTS_EXCEPTION);
         }
         Line line = new Line(color);
         line.setMetro(this);
@@ -30,35 +38,40 @@ public class Metro {
         return line;
     }
 
-    public void createFirstStation(String color, String name, List<Station> stations) throws LineCreationException, StationCreationException {
+    public void createFirstStation(String color, String name, List<Station> stations)
+            throws LineCreationException, StationCreationException {
         if (!isLineWithColorExists(color, lines)) {
-            throw new LineCreationException("Линии с таким цветом не существует");
+            throw new LineCreationException(LINE_COLOR_NOT_EXISTS_EXCEPTION);
         }
         if (checkStationName(name, lines)) {
-            throw new StationCreationException("Такое имя есть на станциях");
+            throw new StationCreationException(STATION_NAME_EXISTS_EXCEPTION);
         }
         Line line = getLine(color);
         if (line.getStations().size() != 0) {
-            throw new StationCreationException("На линии есть станции");
+            throw new StationCreationException(STATION_ON_LINE_EXISTS_EXCEPTION);
         }
         line.addFirstStation(name);
     }
 
-    public void createLastStation(String color, String name, Duration transferTime, Set<Station> stations)
+    public void createLastStation(String color, String name, Duration transferTime,
+                                  Set<Station> stations)
             throws LineCreationException, StationCreationException, TimeDurationException {
         if (!isLineWithColorExists(color, lines)) {
-            throw new LineCreationException("Линии с таким цветом не существует");
+            throw new LineCreationException(LINE_COLOR_NOT_EXISTS_EXCEPTION);
         }
         if (checkStationName(name, lines)) {
-            throw new StationCreationException("Такое имя есть на станциях");
+            throw new StationCreationException(STATION_NAME_EXISTS_EXCEPTION);
         }
         if (transferTime.isNegative() || transferTime.isZero()) {
-            throw new TimeDurationException("Время перегона меньше или равно 0");
+            throw new TimeDurationException(TRANSIT_TIME_EXCEPTION);
         }
         Line line = getLine(color);
         Station station = line.addLastStation(name);
         int indexPrevStation = line.getStations().size() - 1;
-        Station prevStation = line.getStations().stream().skip(indexPrevStation - 1).findFirst().get();
+        Station prevStation = line.getStations()
+                .stream()
+                .skip(indexPrevStation - 1)
+                .findFirst().get();
         checkPrevStation(prevStation);
         prevStation.setNextStation(station);
         station.setPrevStation(prevStation);
@@ -66,14 +79,16 @@ public class Metro {
         station.addTransferStation(stations);
     }
 
-    public int countTransferBetweenStation(Station stationStart, Station stationEnd) throws TransferException, StationExistException {
+    public int countTransferBetweenStation(Station stationStart, Station stationEnd)
+            throws TransferException, StationExistException {
         checkEqualsStation(stationStart, stationEnd);
         isStationExist(stationStart, stationEnd);
         int count = 0;
         if (stationStart.getLine().getColorLine().equals(stationEnd.getLine().getColorLine())) {
             count = countTransferBetweenStationOnLine(stationStart, stationEnd);
         } else {
-            Station stationTransfer = findStationForTransfer(stationStart.getLine(), stationEnd.getLine());
+            Station stationTransfer = findStationForTransfer(stationStart.getLine(),
+                    stationEnd.getLine());
             count += countTransferBetweenStationOnLine(stationStart, stationTransfer);
             stationTransfer = findStationForTransfer(stationEnd.getLine(), stationStart.getLine());
             count += countTransferBetweenStationOnLine(stationTransfer, stationEnd);
@@ -84,22 +99,22 @@ public class Metro {
     private void isStationExist(Station station1, Station station2) throws StationExistException {
         if (lines.stream().noneMatch(line -> line.getStations().contains(station1))
             || lines.stream().noneMatch(line -> line.getStations().contains(station2))) {
-            throw new StationExistException("Станции не существует на линии");
+            throw new StationExistException(STATION_ON_LINE_NOT_EXISTS_EXCEPTION);
         }
     }
 
     private void checkEqualsStation(Station station1, Station station2) throws TransferException {
         if (station1.equals(station2)) {
-            throw new TransferException("Начальная станция равна конечной");
+            throw new TransferException(START_STATION_EQUALS_END_EXCEPTION);
         }
     }
 
     private void checkPrevStation(Station prevStation) throws StationCreationException {
         if (prevStation == null) {
-            throw new StationCreationException("Предыдущая станция отсутсвует");
+            throw new StationCreationException(PREV_STATION_NOT_EXISTS_EXCEPTION);
         }
         if (prevStation.getNextStation() != null) {
-            throw new StationCreationException("Предыдущая станция имеет следющую станцию");
+            throw new StationCreationException(PREV_STATION_HAS_NEXT_EXCEPTION);
         }
     }
 
@@ -129,7 +144,8 @@ public class Metro {
                 .get();
     }
 
-    private int countTransferBetweenStationOnLine(Station stationStart, Station stationEnd) throws TransferException {
+    private int countTransferBetweenStationOnLine(Station stationStart, Station stationEnd)
+            throws TransferException {
         int count = countTransferBetweenNextStation(stationStart, stationEnd);
         if (count != -1) {
             return count;
@@ -137,7 +153,8 @@ public class Metro {
             count = countTransferBetweenPrevStation(stationStart, stationEnd);
         }
         if (count == -1) {
-            throw new TransferException("Нет пути из станции " + stationStart.getName() + " до " + stationEnd.getName());
+            throw new TransferException("Нет пути из станции " + stationStart.getName()
+                    + " до " + stationEnd.getName());
         }
         return count;
     }

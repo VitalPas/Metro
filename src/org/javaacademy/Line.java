@@ -4,7 +4,7 @@ import java.util.LinkedHashSet;
 
 public class Line {
     private String colorLine;
-    private LinkedHashSet<Station> stations = new LinkedHashSet<>();
+    private final LinkedHashSet<Station> stations = new LinkedHashSet<>();
     private Metro metro;
 
     public Line(String colorLine) {
@@ -25,10 +25,6 @@ public class Line {
 
     public void setColorLine(String colorLine) {
         this.colorLine = colorLine;
-    }
-
-    public void setStations(LinkedHashSet<Station> stations) {
-        this.stations = stations;
     }
 
     public void setMetro(Metro metro) {
