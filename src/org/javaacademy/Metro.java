@@ -1,24 +1,20 @@
 package org.javaacademy;
 
+import static org.javaacademy.exception.TextException.*;
+
+import java.math.BigInteger;
 import java.time.Duration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.time.LocalDate;
+import java.util.*;
 import org.javaacademy.exception.*;
 
+/**
+  Метро
+ */
 public class Metro {
-    private static final String LINE_COLOR_EXISTS_EXCEPTION = "Линия с таким цветом уже существует";
-    private static final String LINE_COLOR_NOT_EXISTS_EXCEPTION = "Линии с таким цветом не существует";
-    private static final String STATION_NAME_EXISTS_EXCEPTION = "Такое имя есть на станциях";
-    private static final String STATION_ON_LINE_EXISTS_EXCEPTION = "На линии есть станции";
-    private static final String STATION_ON_LINE_NOT_EXISTS_EXCEPTION = "Станции не существует на линии";
-    private static final String TRANSIT_TIME_EXCEPTION = "На линии есть станции";
-    private static final String START_STATION_EQUALS_END_EXCEPTION = "Начальная станция равна конечной";
-    private static final String PREV_STATION_NOT_EXISTS_EXCEPTION = "Предыдущая станция отсутсвует";
-    private static final String PREV_STATION_HAS_NEXT_EXCEPTION = "Предыдущая станция имеет следющую станцию";
-
     private final String city;
     private final HashSet<Line> lines = new HashSet<>();
+    private final List<SeasonTicket> seasonTickets = new LinkedList<>();
 
     public Metro(String city) {
         this.city = city;
@@ -26,6 +22,10 @@ public class Metro {
 
     public Set<Line> getLines() {
         return lines;
+    }
+
+    public List<SeasonTicket> getSeasonTickets() {
+        return seasonTickets;
     }
 
     public Line createLine(String color) throws LineCreationException {
@@ -40,7 +40,7 @@ public class Metro {
 
     public void createFirstStation(String color, String name, List<Station> stations)
             throws LineCreationException, StationCreationException {
-        if (!isLineWithColorExists(color, lines)) {
+        if (isLineWithColorNotExists(color, lines)) {
             throw new LineCreationException(LINE_COLOR_NOT_EXISTS_EXCEPTION);
         }
         if (checkStationName(name, lines)) {
@@ -56,7 +56,61 @@ public class Metro {
     public void createLastStation(String color, String name, Duration transferTime,
                                   Set<Station> stations)
             throws LineCreationException, StationCreationException, TimeDurationException {
-        if (!isLineWithColorExists(color, lines)) {
+        Station station = createStationHelper(color, name, transferTime);
+        station.addTransferStation(stations);
+    }
+
+    public void createLastStation(String color, String name, Duration transferTime)
+            throws LineCreationException, StationCreationException, TimeDurationException {
+        createStationHelper(color, name, transferTime);
+    }
+
+
+    public int countTransferBetweenStation(Station stationStart, Station stationEnd)
+            throws TransferException, StationExistException {
+        checkEqualsStation(stationStart, stationEnd);
+        isStationNotExistsOnLine(stationStart, stationEnd);
+        int count = 0;
+        if (stationStart.getLine().getColorLine().equals(stationEnd.getLine().getColorLine())) {
+            count = countTransferBetweenStationOnLine(stationStart, stationEnd);
+        } else {
+            Station stationTransfer = findStationForTransfer(stationStart.getLine(),
+                    stationEnd.getLine());
+            count += countTransferBetweenStationOnLine(stationStart, stationTransfer);
+            stationTransfer = findStationForTransfer(stationEnd.getLine(), stationStart.getLine());
+            count += countTransferBetweenStationOnLine(stationTransfer, stationEnd);
+        }
+        return count;
+    }
+
+    //Генерация номера проездного
+    public SeasonTicket generateSeasonTicketNumber() {
+        String number = "a" + String.format("%04d", seasonTickets.size() + 1);
+        SeasonTicket seasonTicket = new SeasonTicket(number);
+        seasonTickets.add(seasonTicket);
+        return seasonTicket;
+    }
+
+    //Проверка действительности абонемента
+    public boolean isSeasonTicketValid(String number, LocalDate checkDate) {
+        return seasonTickets.stream()
+                .filter(seasonTicket -> seasonTicket.getNumber().equals(number))
+                .findFirst().orElseThrow().getDataStart().isAfter(checkDate);
+    }
+
+    //Печать доходов касс всех станций метро
+    public void infoFromAllDesk() {
+        Map<LocalDate, BigInteger> map = new TreeMap<>(LocalDate::compareTo);
+        lines.stream().flatMap(line -> line.getStations()
+                .stream()).flatMap(station -> station.getDesk().getMapIncome().entrySet()
+                .stream()).forEach(localDateIntegerEntry -> map.merge(localDateIntegerEntry.getKey(),
+                localDateIntegerEntry.getValue(), BigInteger::add));
+        map.entrySet().forEach(System.out::println);
+    }
+
+    private Station createStationHelper(String color, String name, Duration transferTime)
+            throws LineCreationException, StationCreationException, TimeDurationException {
+        if (isLineWithColorNotExists(color, lines)) {
             throw new LineCreationException(LINE_COLOR_NOT_EXISTS_EXCEPTION);
         }
         if (checkStationName(name, lines)) {
@@ -71,32 +125,16 @@ public class Metro {
         Station prevStation = line.getStations()
                 .stream()
                 .skip(indexPrevStation - 1)
-                .findFirst().get();
+                .findFirst().orElseThrow();
         checkPrevStation(prevStation);
         prevStation.setNextStation(station);
         station.setPrevStation(prevStation);
         prevStation.setTransferTime(transferTime);
-        station.addTransferStation(stations);
+        return station;
     }
 
-    public int countTransferBetweenStation(Station stationStart, Station stationEnd)
-            throws TransferException, StationExistException {
-        checkEqualsStation(stationStart, stationEnd);
-        isStationExist(stationStart, stationEnd);
-        int count = 0;
-        if (stationStart.getLine().getColorLine().equals(stationEnd.getLine().getColorLine())) {
-            count = countTransferBetweenStationOnLine(stationStart, stationEnd);
-        } else {
-            Station stationTransfer = findStationForTransfer(stationStart.getLine(),
-                    stationEnd.getLine());
-            count += countTransferBetweenStationOnLine(stationStart, stationTransfer);
-            stationTransfer = findStationForTransfer(stationEnd.getLine(), stationStart.getLine());
-            count += countTransferBetweenStationOnLine(stationTransfer, stationEnd);
-        }
-        return count;
-    }
-
-    private void isStationExist(Station station1, Station station2) throws StationExistException {
+    private void isStationNotExistsOnLine(Station station1, Station station2)
+            throws StationExistException {
         if (lines.stream().noneMatch(line -> line.getStations().contains(station1))
             || lines.stream().noneMatch(line -> line.getStations().contains(station2))) {
             throw new StationExistException(STATION_ON_LINE_NOT_EXISTS_EXCEPTION);
@@ -128,10 +166,14 @@ public class Metro {
         return lines.stream().anyMatch((line -> line.getColorLine().equals(color)));
     }
 
+    private boolean isLineWithColorNotExists(String color, HashSet<Line> lines) {
+        return lines.stream().noneMatch((line -> line.getColorLine().equals(color)));
+    }
+
     private Line getLine(String color) {
         return lines.stream()
                 .filter(line -> line.getColorLine().equals(color))
-                .findFirst().get();
+                .findFirst().orElseThrow();
     }
 
     private Station findStationForTransfer(Line line1, Line line2) {
@@ -141,7 +183,7 @@ public class Metro {
         return line1.getStations().stream()
                 .filter(station -> station.getTransferStation() != null)
                 .findFirst()
-                .get();
+                .orElseThrow();
     }
 
     private int countTransferBetweenStationOnLine(Station stationStart, Station stationEnd)
@@ -149,11 +191,10 @@ public class Metro {
         int count = countTransferBetweenNextStation(stationStart, stationEnd);
         if (count != -1) {
             return count;
-        } else {
-            count = countTransferBetweenPrevStation(stationStart, stationEnd);
         }
+        count = countTransferBetweenPrevStation(stationStart, stationEnd);
         if (count == -1) {
-            throw new TransferException("Нет пути из станции " + stationStart.getName()
+            throw new TransferException("Нет пути из станции" + stationStart.getName()
                     + " до " + stationEnd.getName());
         }
         return count;

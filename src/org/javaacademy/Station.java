@@ -1,13 +1,20 @@
 package org.javaacademy;
 
+import java.math.BigInteger;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Objects;
 import java.util.Set;
+
 import org.javaacademy.exception.StationExistException;
 import org.javaacademy.exception.TransferException;
 
+/**
+ * Станция
+ */
 public class Station {
+    private static final BigInteger SEASON_TICKET_PRICE = BigInteger.valueOf(3000);
+
     private final Metro metro;
     private final Line line;
     private Station prevStation;
@@ -15,13 +22,12 @@ public class Station {
     private Set<Station> transferStation;
     private Duration transferTime;
     private String name;
-    private final Desk desk;
+    private final Desk desk = new Desk();
 
     public Station(Metro metro, Line line, String name) {
         this.metro = metro;
         this.line = line;
         this.name = name;
-        this.desk = new Desk();
     }
 
     public Desk getDesk() {
@@ -72,11 +78,39 @@ public class Station {
         this.name = name;
     }
 
+    //Добавить станцию пересадки
     public void addTransferStation(Set<Station> transferStations) {
         if (transferStations == null) {
             return;
         }
         this.transferStation = transferStations;
+    }
+
+    //Продажа билета
+    public void saleTicket(LocalDate localDate, Station stationStart, Station stationEnd)
+            throws StationExistException, TransferException {
+        BigInteger ticketPrice = BigInteger.valueOf(metro.countTransferBetweenStation(stationStart,
+                stationEnd) * 5L + 20);
+        desk.salePriceTicket(localDate, ticketPrice);
+    }
+
+    //Продажа абонемента
+    public void saleSeasonTicket(LocalDate dateSale) {
+        desk.salePriceTicket(dateSale, SEASON_TICKET_PRICE);
+        SeasonTicket seasonTicket = metro.generateSeasonTicketNumber();
+        seasonTicket.setDataStart(dateSale);
+        seasonTicket.setDateEnd(dateSale.plusDays(30));
+    }
+
+    //Продление абонемента
+    public void renewSeasonTicket(String number, LocalDate newDataStart) {
+        SeasonTicket seasonTicketForRenew =
+                metro.getSeasonTickets()
+                        .stream()
+                        .filter(seasonTicket -> seasonTicket.getNumber().equals(number))
+                        .findFirst().orElseThrow();
+        seasonTicketForRenew.setDataStart(newDataStart);
+        seasonTicketForRenew.setDateEnd(newDataStart.plusDays(30));
     }
 
     private String printChangeLines() {
@@ -85,15 +119,9 @@ public class Station {
         }
         return transferStation.stream()
                 .findFirst()
-                .get()
+                .orElseThrow()
                 .getLine()
                 .getColorLine();
-    }
-
-    public void saleTicket(LocalDate localDate, Station stationStart, Station stationEnd)
-            throws StationExistException, TransferException {
-        int ticketPrice = metro.countTransferBetweenStation(stationStart, stationEnd) * 5 + 20;
-        desk.savePriceTicket(localDate, ticketPrice);
     }
 
     @Override

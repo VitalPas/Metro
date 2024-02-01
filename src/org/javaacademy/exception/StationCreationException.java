@@ -1,7 +1,7 @@
 package org.javaacademy.exception;
 
-public class StationCreationException extends Exception {
-    public StationCreationException(String message) {
-        super(message);
+public class StationCreationException extends RuntimeException {
+    public StationCreationException(TextException message) {
+        super(message.getText());
     }
 }

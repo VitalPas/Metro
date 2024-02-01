@@ -2,6 +2,9 @@ package org.javaacademy;
 
 import java.util.LinkedHashSet;
 
+/**
+ Линия метро
+ */
 public class Line {
     private String colorLine;
     private final LinkedHashSet<Station> stations = new LinkedHashSet<>();
